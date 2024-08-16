@@ -9,18 +9,9 @@ set(MJ_FILE ${CMAKE_BINARY_DIR}/mujoco-${MJ_VER}-linux-x86_64.tar.gz)
 if(NOT EXISTS ${MJ_FILE})
     file(DOWNLOAD ${MJ_URL} ${MJ_FILE} SHOW_PROGRESS)
 endif()
-# Compute the SHA256 hash
-if(UNIX)
-    execute_process(COMMAND sha256sum ${MJ_FILE}
-                    OUTPUT_VARIABLE MJ_SHA256_OUTPUT
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif(WIN32)
-    execute_process(COMMAND certutil -hashfile ${MJ_FILE} SHA256
-                    OUTPUT_VARIABLE MJ_SHA256_OUTPUT
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
-# Extract the hash from the output
-string(REGEX MATCH "^[0-9a-fA-F]+" MJ_SHA256 ${MJ_SHA256_OUTPUT})
+
+# taken from https://github.com/google-deepmind/mujoco/releases/tag/ (ensures download integrity)
+set(MJ_SHA256 "2802ee237d3c9e187d9c8bf83188d1ac6c3a92460343e26fa23d41fcd8425490") 
 
 # Use the computed hash in ExternalProject_Add
 include(ExternalProject)
