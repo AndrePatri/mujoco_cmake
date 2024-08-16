@@ -1,16 +1,34 @@
 cmake_minimum_required(VERSION 3.0)
-project(mujoco_cmake VERSION 3.1.6)
+project(mujoco_cmake VERSION 3.2.2)
 
 set(MJ_VER ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+set(MJ_URL https://github.com/google-deepmind/mujoco/releases/download/${MJ_VER}/mujoco-${MJ_VER}-linux-x86_64.tar.gz)
 
+# Download the file (if it doesn't exist already)
+set(MJ_FILE ${CMAKE_BINARY_DIR}/mujoco-${MJ_VER}-linux-x86_64.tar.gz)
+if(NOT EXISTS ${MJ_FILE})
+    file(DOWNLOAD ${MJ_URL} ${MJ_FILE} SHOW_PROGRESS)
+endif()
+# Compute the SHA256 hash
+if(UNIX)
+    execute_process(COMMAND sha256sum ${MJ_FILE}
+                    OUTPUT_VARIABLE MJ_SHA256_OUTPUT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+elseif(WIN32)
+    execute_process(COMMAND certutil -hashfile ${MJ_FILE} SHA256
+                    OUTPUT_VARIABLE MJ_SHA256_OUTPUT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+# Extract the hash from the output
+string(REGEX MATCH "^[0-9a-fA-F]+" MJ_SHA256 ${MJ_SHA256_OUTPUT})
 
+# Use the computed hash in ExternalProject_Add
 include(ExternalProject)
-
 ExternalProject_Add(
     mujoco
     PREFIX "mujoco"
-    URL https://github.com/google-deepmind/mujoco/releases/download/${MJ_VER}/mujoco-${MJ_VER}-linux-x86_64.tar.gz
-    URL_HASH SHA256=135494a08010bd189e655b6bd048bdfecf6305f4cd511fe56685fedbe662c6f2
+    URL ${MJ_URL}
+    URL_HASH SHA256=${MJ_SHA256}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
